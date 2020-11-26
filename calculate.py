@@ -1,89 +1,213 @@
-math = "10 + 20 + 30"
-math = math.split()
-
+import copy
+import time
 class Tree(object):
 
   def __init__(self):
-    self.children = []
-    self.parentTree = 0
     self.node = 0
-    self.left = ""
-    self.right = ""
-    self.operation = ""
-    self.result = ""
-    self.calculate()
-
-  def calculate(self):
-    if self.operation == "+":
-      self.result = self.left + self.right
-    if self.operation == "-":
-      self.result = self.left - self.right
-    if self.operation == "*":
-      self.result = self.left * self.right
-    if self.operation == "/":
-      self.result = self.left / self.right   
+    self.left = None
+    self.right = None
+    self.data = ""
+    self.parent = None
   def __str__(self):
     return str(self.node)
   def __repr__(self):
     return str(self.node)
 
-class treeBoss():
+children = []
 
+def splitEquation(math):
+  nums = []
+  ops = []
+  answer = ""
+  for i in math:
+    if i == "=":
+      answer = math[-1]
+      break
+    if i.isdigit() == True:
+      nums.append(i)
+    if i.isdigit() == False:
+      ops.append(i)
+  return nums, ops, answer
+
+def inputEquation():
+  math = "10 * 10 = 100"
+  math = math.split()
+  answer = "blank"
+  nums, ops, answer = splitEquation(math)
+  splitEquation(math)
+  numOfNums = len(nums)
+  if numOfNums < 2:
+    print("This is not the proper form of a question. Please try again.")
+    inputEquation()
+  elif answer == "blank":
+    print("This is not the proper form of a question. Please try again.")
+    inputEquation()
+  else:
+    eq = Equation()
+    eq.nums = nums
+    eq.ops = ops
+    eq.answer = answer
+    eq.math = math
+  return eq
+
+class Equation(object):
+  ''' Parses input given to the calculator'''
   def __init__(self):
-    self.treeList = []
-    self.myTree = Tree()
-    indices =[ [i, j] for i, j in enumerate(math)]
-    self.nums = [ i for i in indices if i[1].isnumeric() == True]
-    self.ops = [ i for i in indices if i[1].isnumeric() == False]
-    self.debugInfo()
+    self.math = ""
+    self.answer = ""
+    self.nums = []
+    self.ops = []
 
-  def opPrecedence(self, ops):
-    ''' Will build this class later'''
-    pass
+class calculate(object):
+  ''' This is sloppy as fuck and needs to be fixed '''
+  def __init__(self, ops, nums):
+    self.answer = 0
+    self.ops = ops
+    self.nums = nums
+    self.operation()
+  def operation(self):
+    ''' call a function depending upon operator '''
+    opDict = {
+        "+": self.add,
+        "-": self.subtract,
+        "/": self.divide,
+        "*": self.multiply}
+    # Checks operator, then passes self.nums to function.
+    self.choice = opDict[self.ops[0]](self.nums)
+  def add(self, *args):
+    '''For whatever reason self.choice turns changes nums into a tuple. So we need to unpack it.'''
+    args = args[0]
+    for i in args:
+      i = int(i)
+      self.answer += i
+  def subtract(self, *args):
+    args = args[0]
+    for i in args:
+      i = int(i)
+      self.answer -= i
+  def multiply(self, *args):
+    args = args[0]
+    result = int(args[0])
+    args.pop(0)
+    for i in args:
+      i = int(i)
+      result *= i
+    self.answer = result
+  def divide(self, *args):
+    args = args[0]
+    result = int(args[0])
+    args.pop(0)
+    for i in args:
+      i = int(i)
+      result /= i
+    self.answer = result
+  def __str__(self):
+    return str(self.answer)
+  def __repr__(self):
+    return str(self.answer)
 
-  def createBranches(self, nums):
-    myTree = self.myTree
-    numnodes = len(self.ops)
-    for i in nums:
-      if numnodes >= 2:
-        self.mapTrees()
-        myTree.left.right = int(i[1])
-        myTree.left.operation = self.ops[1][1]
-        numnodes=numnodes-1
-      elif myTree.left.left == "":
-        self.myTree.left.left = int(i[1])
-      elif myTree.left.right == "":
-        myTree.left.right = int(i[1])
+def createTrees(nums, ops):
+  nums = copy.deepcopy(nums)
+  ops = copy.deepcopy(ops)
+  for i in nums:
+    tree = Tree()
+    tree.data = ops[0]
+    tree.left = Tree()
+    tree.right = Tree()
+    trees = [tree.right, tree.left]
+    count = 1
+    for i in trees:
+      i.parent = tree.node
+      i.node = tree.node + count
+      count = count + 1
+      i.data = nums[0]
+      nums.pop(0)
+    ops.pop(0)
+    children.insert(0,tree)
+    children.extend(trees)
+  else:
+    pass # This needs to be expanded to solve for more complex equations
 
-  def mapTrees(self):
-    myTree = self.myTree
-    treeList = self.treeList
-    node = self.myTree.node
-    myTree.left = Tree()
-    myTree.right = Tree()
-    myTree.left.node = node +1
-    myTree.right.node = node +2
-    node = node+1
-    treeList.append(myTree)
-    treeList.append(myTree.left)
-    treeList.append(myTree.right)
-    myTree.children.append(myTree.left)
-    myTree.children.append(myTree.right)
+class refreshTrees(object):
+  def __init__(self):
+    self.updateTrees()
+  def isOperator(self, tree):
+    # Add code which check if operator is valid
+    if tree.data.isdigit() == True:
+      return False
+    else:
+      return True
 
-  def debugInfo(self):
-    myTree = self.myTree
-    self.createBranches(self.nums)
-    print("------------------")
-    print("Root Tree Node:", myTree.right.node)
-    print("Parent Tree:", myTree.left.parentTree)
-    print("Tree List:", self.treeList)
-    print("Children", myTree.children)
-    print("MyTree.right:", self.myTree.right)
-    print("MyTree.left:", self.myTree.left)
-    print("MyTree.left.left:", myTree.left.left)
-    print("MyTree.left.operation:", myTree.left.operation)
-    print("MyTree.left.right:", myTree.left.right)
-    myTree.left.calculate()
-    print("Answer for left tree:", myTree.left.result)
+  def updateTrees(self):
+    for i in children:
+      if self.isOperator(i) == True:
+        nums = [i.right.data, i.left.data]
+        operator = i.data
+        i.data = calculate(operator, nums)
+        children.remove(i.right)
+        children.remove(i.left)
+        i.right = None
+        i.left = None
 
-treeBoss()
+def checkAnswer(parseTree):
+  ''' Lots of type coercsion in this function, probably a much better way to do this'''
+  correctAnswer = children[0].data.answer
+  userAnswer = int(parseTree.answer)
+  if userAnswer == correctAnswer:
+    print("You entered", userAnswer, "which is the correct answer. Congratulations!")
+    return True
+  else:
+    print("Sorry, that's the wrong answer. Try again.")
+    return False
+
+
+def answerChecker():
+  equation = inputEquation()
+  nums = equation.nums
+  ops = equation.ops
+  createTrees(nums, ops)
+  refreshTrees()
+  checkAnswer(equation)
+
+
+class memoryBank():
+  ''' This is the budget version. The bigger version would involve a database'''
+  def __init__(self):
+    self.inputBank = ["10 * 10", "10 * 4"]
+    self.questionBank = []
+    self.answerBank = []
+    self.count = 0
+  def createQuestions(self):
+    # print("Enter as many questions as you would like, or press X to exit")
+    # for i in range(10):
+    #   x = input("Enter a new question: ")
+    #   if x == "x":
+    #     break
+    #   inputBank.append(x)
+    for i in self.inputBank:
+      i = i.split()
+      self.questionBank.append(splitEquation(i))
+    for i in self.questionBank:
+      nums = i[0]
+      ops = i[1][0]
+      self.answerBank.append(calculate(ops, nums))
+  def answerQuestions(self):
+    for i in self.inputBank:
+      print("-----------------------\n")
+      print(i, "=", end = " ")
+      start = time.time()
+      answer = int(input())
+      end = time.time()
+      correctAnswer = self.answerBank[self.count].answer
+      if answer == correctAnswer:
+        print("\n\nYes, the answer was", correctAnswer)
+        print("It took","%.2f" % (end-start), "seconds to answer the question\n\n")
+        input("Press any key to continue.")
+        print("\n")
+      else:
+        print("No, sorry the answer was", correctAnswer)
+      self.count = self.count + 1
+
+game = memoryBank()
+game.createQuestions()
+game.answerQuestions()
